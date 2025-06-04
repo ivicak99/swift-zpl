@@ -38,13 +38,30 @@ import AppKit
 
 extension GraphicField {
     public init(image: NSImage, size: CGSize? = nil, encoder: ZPLImageEncoder = .init()) {
-        if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
-           let image = ZPLCGImageReader(cgImage: cgImage, targetSize: size)
-        {
-            self.init(imageReader: image, encoder: encoder)
-        } else {
-            self.init(encoder: encoder)
-        }
+
+#if targetEnvironment(macCatalyst)
+if
+    let tiff = image.tiffRepresentation,
+    let bitmap = NSBitmapImageRep(data: tiff),
+    let cgImage = bitmap.cgImage,
+    let image = ZPLCGImageReader(cgImage: cgImage, targetSize: size)
+{
+    self.init(imageReader: image, encoder: encoder)
+} else {
+    self.init(encoder: encoder)
+}
+#else
+if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+   let image = ZPLCGImageReader(cgImage: cgImage, targetSize: size)
+{
+    self.init(imageReader: image, encoder: encoder)
+} else {
+    self.init(encoder: encoder)
+}
+#endif
+
+
+        
     }
 }
 #elseif canImport(UIKit)
