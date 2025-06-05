@@ -38,8 +38,7 @@ public struct GraphicField: ZPLCommandConvertible {
 
 
 
-
-
+#if os(iOS) || os(tvOS) || os(watchOS) || targetEnvironment(macCatalyst)
 import UIKit
 
 extension GraphicField {
@@ -53,3 +52,20 @@ extension GraphicField {
         }
     }
 }
+#endif
+
+#if os(macOS) && !targetEnvironment(macCatalyst)
+import AppKit
+
+extension GraphicField {
+    public init(image: NSImage, size: CGSize? = nil, encoder: ZPLImageEncoder = .init()) {
+        if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+           let image = ZPLCGImageReader(cgImage: cgImage, targetSize: size)
+        {
+            self.init(imageReader: image, encoder: encoder)
+        } else {
+            self.init(encoder: encoder)
+        }
+    }
+}
+#endif
